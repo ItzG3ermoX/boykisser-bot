@@ -29,7 +29,7 @@ A playful, chaotic, and slang-heavy Discord bot that responds with cute femboy/f
 ### 1. Clone this repo
 
 ```bash
-git clone https://github.com/yourusername/boykisser-bot.git
+git clone https://github.com/ItzG3ermoX/boykisser-bot
 cd boykisser-bot
 ```
 
