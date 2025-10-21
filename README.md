@@ -85,7 +85,7 @@ python bot.py
 ## 🔐 Privacy & Safety
 
 - Messages are processed using an external AI model via Together.ai  
-- No long-term memory: user history is stored locally in `user_memory.json`  
+- Memory of 4 messages per user: user history is stored locally in `user_memory.json`  
 - Safe for queer, meme-heavy, chaotic spaces  
 - Not designed for moderation or SFW-only use (yet)
 
