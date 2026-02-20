@@ -1,113 +1,53 @@
-# 💋 boykisser-bot
+# 💋 boykisser-bot  
 
-A playful, chaotic, and slang-heavy Discord bot that responds with cute femboy/furry/boykisser energy. Think memes, emoticons, and silliness—all powered by AI via [Together.ai](https://www.together.ai/).
+A playful, chaotic, and slang-heavy Discord bot that responds with cute femboy/furry/boykisser energy.  
+Powered by **Groq Cloud** for lightning-fast, "intelligent" silliness.  
 
 > ✨ "boykissium detected"  
 > 🐾 "skirt go spinny!!"  
-> 🤖 Made for those who crave goofy vibes in their server.
+> 🤖 Powered by Llama-3.3-70B via Groq.  
 
 ---
 
-## 🧠 Features
+## 🧠 Features  
 
-- Responds to:
-  - Mentions (`@boykisser`)
-  - The word `boykisser`
-  - Random messages (1 in 20 chance)
-- Always replies with:
-  - Meme-like femboy slang
-  - One or more emoticons (e.g. `:3`, `X3`, `owo`)
-  - Optional GIF from the boykisser collection
-- Personal memory per user (short-term context)
-- Includes a preset-based **slang dictionary** and **quote matcher** based on message content
-- GPT-style responses using Together.ai
+### 🔔 Trigger Logic
+- Responds when **pinged** (`@boykisser`)  
+- Responds when you **reply** directly to its message  
+- Responds if the keyword `boykisser` is mentioned in the chat  
+- Automatically adds a 👀 reaction while processing  
+
+### 🧩 AI Personality
+- 🌍 **Multilingual** – Automatically detects your language and responds in the same one  
+- 💬 **Smart Slang** – Uses lingo like *uwu, :3, blahaj, silly goober* naturally  
+- 📖 **Lore Aware** – Recognizes Germox (daddy), foxydo, and blossom  
+- 🍋🔥 **Lemon Hostility** – Hates lemons and will threaten to burn your house down if asked  
+
+### 🧠 Shared Memory
+- Remembers the last **20 messages globally** to maintain conversation context  
+
+### 🧹 Auto-Maintenance
+- Automatically wipes the `log.txt` file every hour to save space  
 
 ---
 
-## 🔧 Setup
+## 🔧 Setup  
 
-### 1. Clone this repo
+### 1️⃣ Get your API Keys  
+
+- **Discord Token**  
+  Create an application in the Discord Developer Portal:  
+  https://discord.com/developers/applications  
+
+- **Groq API Key**  
+  Create a free account and get your key at:  
+  https://console.groq.com/  
+
+---
+
+### 2️⃣ Clone & Install  
 
 ```bash
 git clone https://github.com/ItzG3ermoX/boykisser-bot
 cd boykisser-bot
-```
-
-### 2. Install dependencies
-
-```bash
 pip install -r requirements.txt
-```
-
-> Required packages include:  
-> `discord.py`, `together`, `python-dotenv`
-
-### 3. Add environment variables
-
-Create a file named `.env.kiss` in the project folder and add your keys:
-
-```env
-DISCORD_TOKEN=your_discord_bot_token
-TOGETHER_API_KEY=your_together_api_key
-```
-
-The discord bot token can be found in your discord developer portal.
-Together.ai API can be found in your together.ai account settings under API Keys.
-
-### 4. Run the bot
-
-```bash
-python bot.py
-```
-
----
-
-## 🗂️ File Structure
-
-| File                  | Description                                       |
-|-----------------------|---------------------------------------------------|
-| `bot.py`              | Main bot logic (Discord + Together integration)   |
-| `slang_presets.json`  | Contains slang, emoticons, GIFs, and quotes       |
-| `user_memory.json`    | Stores short-term user memory                     |
-| `.env.kiss`           | Secret tokens (not committed to version control)  |
-
----
-
-## 💬 Example Response
-
-> **User:** hey @boykisser what’s the vibe?  
-> **Bot:** silly vibe detected :3 finally, boykissium!!  
-> 🤔 **BOYKISSER SPOTTED!** X3  
-> https://c.tenor.com/R54aJnNOznkAAAAC/tenor.gif
-
----
-
-## 🔐 Privacy & Safety
-
-- Messages are processed using an external AI model via Together.ai  
-- Memory of 4 messages per user: user history is stored locally in `user_memory.json`  
-- Safe for queer, meme-heavy, chaotic spaces  
-- Not designed for moderation or SFW-only use (yet)
-
----
-
-## 🧪 Future Ideas
-
-- Slash command support (e.g. `/vibe`)
-- Custom model switching
-- Web dashboard for editing `slang_presets.json`
-- Server-specific behavior toggle (chaotic vs polite)
-
----
-
-## 🧃 Bonus Quotes
-
-> “Burschenküsser meldet sich zum Dienst :33”  
-> “I gaslit one of my friends into becoming a Femboy as a joke...”  
-> “Skirt go spinny!!”  
-> “Finally, boykissium.”
-
----
-
-Made with 💕 and just a smol pinch of chaos.  
-Stay cute. Stay cursed. Stay boykissin’ :3
