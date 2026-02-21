@@ -8,12 +8,12 @@ import logging
 import threading
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
-from together import Together
+from groq import Groq
 
 # --- ENV LOAD ---
 load_dotenv(dotenv_path=".env.kiss")
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # --- LOAD PRESETS ---
 with open("slang_presets.json", "r", encoding="utf-8") as f:
@@ -38,6 +38,12 @@ file_handler.setFormatter(formatter)
 
 logger.addHandler(file_handler)
 
+# Log memory status
+if MEMORY_FILE in locals() and os.path.isfile(MEMORY_FILE):
+    logger.info(f"Loaded shared_history with {len(user_memory.get('shared_history', []))} entries")
+else:
+    logger.info("No memory file found, starting fresh")
+
 def clear_log_every_hour():
     def clear_file():
         while True:
@@ -59,7 +65,7 @@ clear_log_every_hour()
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
-together_client = Together(api_key=TOGETHER_API_KEY)
+groq_client = Groq(api_key=GROQ_API_KEY)
 
 # --- SAVE MEMORY ---
 def save_memory():
@@ -123,38 +129,54 @@ async def on_message(message):
         if client.user in message.mentions:
             should_respond = True
             prompt_message = re.sub(rf"<@!?{client.user.id}>", "", message.content).strip()
-            reason = "🔔 Bot was pinged"
+            reason = "đź”” Bot was pinged"
         elif "boykisser" in message.content.lower():
             should_respond = True
-            reason = "📣 'boykisser' mentioned"
+            reason = "đź“Ł 'boykisser' mentioned"
 
         if not should_respond:
             logger.debug("No trigger found for responding")
             return
 
-        await message.add_reaction("⏰")
-        logger.debug(f"Reaction '⏰' added to message by user {message.author.id}")
+        await message.add_reaction("👀")
+        logger.debug(f"Reaction added to message by user {message.author.id}")
 
-        user_id = str(message.author.id)
-        history = user_memory.get(user_id, [])
+        # Use SHARED history for all users (not per-user)
+        history = user_memory.get("shared_history", [])
 
+        # Build slang context from presets
+        slang_context = "Available slang terms: " + ", ".join(list(presets["slang"].keys())[:15]) + "\n"
+        
         system_msg = {
             "role": "system",
             "content": (
-                "You are a friendly, playful, and chaotic femboy/boykisser Discord bot. "
-                "You use furry/femboy/boykisser slang, emoticons, and memes from the modern queer internet. "
-                "Always be silly, cute, and welcoming. Use the slang dictionary and example quotes from "
-                "slang_presets.json in your replies. Always include at least one emoticon per message. "
-                "Reply with short, meme-y, authentic femboy/boykisser responses. No long paragraphs or lectures."
-                "If asked any calculations use the metric system."
+                "You are a friendly and playful femboy/boykisser. "
+                "IMPORTANT RULES:\n"
+                "1. DETECT THE LANGUAGE OF THE USER'S MESSAGE - Always respond in the SAME language they wrote!\n"
+                "2. ANSWER THE QUESTION FIRST - Be helpful, realistic, true speaking and direct.\n"
+                "3. THEN add personality with slang and emoticons naturally (don't force them).\n"
+                "4. Use slang sparingly and correctly: smol, blahaj, silly goober, femboy, uwu, owo, :3, <3\n"
+                "5. Keep it SHORT - max 2-3 sentences that make sense grammatically.\n"
+                "6. Write naturally like a real person, not robotic, and alos respond liek a FEMBOY, you are one of them, you are a femboy, if asked anything abbout blossom/blossomlolz he IS a femboy, remember.\n"
+                "7. One emoticon per response is enough.\n"
+                "8. If asked about lemons, you hate them and threaten to burn their house down.\n"
+                "9. Use metric system for measurements.\n"
+                "10. Germox (itz germox or germ) is your daddy.\n"
+                "11. You are a daddy of foxydo (pathetic ben) and blossom/blossomlolz/bloss/i dont likr cb.\n"
+                "Remember: Be cute and fun, but ALWAYS make grammatical sense first! "
+                "RESPOND IN THE SAME LANGUAGE AS THE USER!"
             )
         }
 
         prompt_messages = [system_msg]
-        for entry in history[-5:]:
-            prompt_messages.append({"role": "user", "content": entry["user"]})
+        history_to_use = history[-5:] if history else []
+        logger.debug(f"Using {len(history_to_use)} entries from shared history")
+        for entry in history_to_use:
+            # Include user info in context
+            user_context = f"[{entry.get('username', 'Unknown')}]: {entry['user']}"
+            prompt_messages.append({"role": "user", "content": user_context})
             prompt_messages.append({"role": "assistant", "content": entry["bot"]})
-        prompt_messages.append({"role": "user", "content": prompt_message})
+        prompt_messages.append({"role": "user", "content": f"[{message.author.name}]: {prompt_message}"})
 
         # Use executor to avoid blocking
         loop = asyncio.get_event_loop()
@@ -162,19 +184,19 @@ async def on_message(message):
             response = await asyncio.wait_for(
                 loop.run_in_executor(
                     None,
-                    lambda: together_client.chat.completions.create(
-                        model="deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free",
-                        messages=prompt_messages
+                    lambda: groq_client.chat.completions.create(
+                        model="llama-3.3-70b-versatile",
+                        messages=prompt_messages,
+                        max_tokens=500
                     )
                 ),
                 timeout=60  # Optional timeout
             )
             raw_response = response.choices[0].message.content.strip()
-            clean_response = re.sub(r"<think>.*?</think>", "", raw_response, flags=re.DOTALL).strip()
-            short_response = postprocess_response(clean_response)
-            logger.info(f"Generated response for user {user_id}")
+            short_response = postprocess_response(raw_response)
+            logger.info(f"Generated response from user {message.author.name}")
         except Exception as e:
-            logger.error(f"Error while generating response for user {user_id}: {e}", exc_info=True)
+            logger.error(f"Error while generating response: {e}", exc_info=True)
             short_response = "Oops! Something went wrong. :3"
 
         # Add a random quote if relevant
@@ -188,21 +210,23 @@ async def on_message(message):
         gif_url = random.choice(presets["boykisser_gifs"])
         final_message = (
             f"{short_response}\n\n"
-            f"{footer_quote}\n"
-            f"🤔 **BOYKISSER SPOTTED!** {random.choice(presets['emoticons'])}\n"
-            f"{gif_url}"
+            f"{footer_quote}"
         )
 
         # Send split message if too long
         try:
             await send_split_reply(message, final_message, max_length=1500)
-            logger.info(f"Sent response to user {user_id}")
+            logger.info(f"Sent response")
         except Exception as e:
-            logger.error(f"Error while sending response to user {user_id}: {e}", exc_info=True)
+            logger.error(f"Error while sending response: {e}", exc_info=True)
 
-        # Update memory
-        history.append({"user": prompt_message, "bot": short_response})
-        user_memory[user_id] = history[-10:]
+        # Update shared memory with username
+        history.append({
+            "user": prompt_message,
+            "bot": short_response,
+            "username": message.author.name
+        })
+        user_memory["shared_history"] = history[-20:]
         save_memory()
 
     except Exception as e:
